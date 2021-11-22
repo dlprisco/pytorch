@@ -64,6 +64,8 @@ class DynamicType : public Type {
   }
   static const TypeKind Kind = TypeKind::DynamicType;
 
+  explicit DynamicType(Tag, Arguments);
+
  private:
   friend struct Type;
   static DynamicTypePtr create(Type& ty);
