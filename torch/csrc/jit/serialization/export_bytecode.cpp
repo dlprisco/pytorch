@@ -133,7 +133,7 @@ std::vector<std::unique_ptr<GraphFunction>> inlineFunctions(
   return inlined_functions;
 }
 
-std::unique_ptr<mobile::Code> compileGraphToMobileCode(
+mobile::Code compileGraphToMobileCode(
     const std::string& name,
     const std::shared_ptr<Graph>& graph,
     const CompilationOptions& compilation_options,
@@ -144,9 +144,7 @@ std::unique_ptr<mobile::Code> compileGraphToMobileCode(
       compilation_options.enable_default_value_for_unspecified_arg,
       compilation_options.enable_default_args_before_out_args);
 
-  std::unique_ptr<mobile::Code> mobile_code_ptr =
-      std::make_unique<mobile::Code>();
-  mobile::Code& mobile_code = *mobile_code_ptr;
+  mobile::Code mobile_code;
 
   // operator names
   std::vector<std::string> method_names;
@@ -245,7 +243,7 @@ std::unique_ptr<mobile::Code> compileGraphToMobileCode(
 
   mobile_code.types_ = code.type_table();
   mobile_code.register_size_ = code.register_size();
-  return mobile_code_ptr;
+  return mobile_code;
 }
 
 void checkSchema(const FunctionSchema& schema) {
@@ -309,12 +307,12 @@ mobile::Module jitModuleToMobile(
 
   for (const auto& func :
        inlineFunctions(methods_to_export, options.incl_interface_call)) {
-    std::shared_ptr<mobile::Code> mobile_code_ptr = compileGraphToMobileCode(
+  auto mobile_code = compileGraphToMobileCode(
         func->name(), func->graph(), options, debug_info_recorder);
     const auto& schema = func->getSchema();
     checkSchema(schema);
     auto mobile_func = std::make_unique<mobile::Function>(
-        func->qualname(), mobile_code_ptr, schema);
+        func->qualname(), std::move(mobile_code), schema);
     mcu->register_function(std::move(mobile_func));
   }
 
